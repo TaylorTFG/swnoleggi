@@ -6,6 +6,7 @@ generator client {
 }
 
 datasource db {
+<<<<<<< HEAD
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
@@ -54,6 +55,20 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+=======
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          Role      @default(OPERATOR)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+>>>>>>> 8488418c3f470030bcb22429e91e75c7bf005433
 }
 
 model Customer {
@@ -73,9 +88,14 @@ model Equipment {
   description   String?
   category      String
   status        EquipmentStatus @default(AVAILABLE)
+<<<<<<< HEAD
   quantity      Int           @default(1)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+=======
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+>>>>>>> 8488418c3f470030bcb22429e91e75c7bf005433
   rentals       Rental[]
 }
 
@@ -83,21 +103,29 @@ model Rental {
   id            String    @id @default(cuid())
   equipmentId   String
   customerId    String
+<<<<<<< HEAD
   quantity      Int         @default(1)
   startDate     DateTime
   endDate       DateTime?
+=======
+  startDate     DateTime
+  endDate       DateTime
+>>>>>>> 8488418c3f470030bcb22429e91e75c7bf005433
   status        RentalStatus @default(ACTIVE)
   notes         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   equipment     Equipment @relation(fields: [equipmentId], references: [id])
   customer      Customer  @relation(fields: [customerId], references: [id])
+<<<<<<< HEAD
 
   @@index([equipmentId])
   @@index([customerId])
   @@index([startDate])
   @@index([endDate])
   @@index([status])
+=======
+>>>>>>> 8488418c3f470030bcb22429e91e75c7bf005433
 }
 
 enum Role {
@@ -117,4 +145,8 @@ enum RentalStatus {
   COMPLETED
   CANCELLED
   OVERDUE
+<<<<<<< HEAD
 } 
+=======
+}
+>>>>>>> 8488418c3f470030bcb22429e91e75c7bf005433
