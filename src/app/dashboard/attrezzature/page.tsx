@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Plus, Upload, ChevronUp, ChevronDown, Filter } from "lucide-react";
+import { Search, Plus, Upload, ChevronUp, ChevronDown, Filter, ArrowUpDown } from "lucide-react";
 
 interface Equipment {
   id: string;
@@ -18,9 +18,10 @@ interface Equipment {
     endDate: string | null;
     quantity: number;
   }[];
+  rentals?: Array<{ quantity: number }>;
 }
 
-type SortField = "name" | "category" | "quantity";
+type SortField = "name" | "category" | "quantity" | "available";
 type SortOrder = "asc" | "desc";
 
 export default function AttrezzaturePage() {
@@ -116,10 +117,31 @@ export default function AttrezzaturePage() {
   };
 
   const getFutureAvailabilityText = (futureRentals: Equipment["futureRentals"]) => {
-    if (futureRentals.length === 0) return null;
+    if (!futureRentals || futureRentals.length === 0) return null;
     
+    const totalFutureRented = futureRentals.reduce((sum, rental) => sum + rental.quantity, 0);
+    if (totalFutureRented === 0) return null;
+
     const nextRental = futureRentals[0];
-    return `${nextRental.quantity} prenotati dal ${new Date(nextRental.startDate).toLocaleDateString()}`;
+    return `${totalFutureRented} prenotati dal ${new Date(nextRental.startDate).toLocaleDateString()}`;
+  };
+
+  const getAvailableQuantity = (item: Equipment) => {
+    // Calcola la quantità attualmente noleggiata
+    const currentlyRented = item.rentals ? item.rentals.reduce((sum, rental) => sum + rental.quantity, 0) : 0;
+    
+    // Calcola la quantità prenotata per il futuro
+    const futureRented = item.futureRentals ? item.futureRentals.reduce((sum, rental) => sum + rental.quantity, 0) : 0;
+    
+    // Sottrai sia i noleggi attuali che le prenotazioni future
+    return Math.max(0, item.quantity - currentlyRented - futureRented);
+  };
+
+  const getAvailabilityColor = (available: number, total: number) => {
+    if (available === 0) return "text-red-600";
+    if (available < total * 0.2) return "text-orange-600"; // meno del 20% disponibile
+    if (available < total * 0.5) return "text-yellow-600"; // meno del 50% disponibile
+    return "text-green-600"; // più del 50% disponibile
   };
 
   const filteredAndSortedEquipment = equipment
@@ -139,6 +161,8 @@ export default function AttrezzaturePage() {
           return a.category.localeCompare(b.category) * modifier;
         case "quantity":
           return (a.totalQuantity - b.totalQuantity) * modifier;
+        case "available":
+          return (getAvailableQuantity(a) - getAvailableQuantity(b)) * modifier;
         default:
           return 0;
       }
@@ -244,12 +268,21 @@ export default function AttrezzaturePage() {
                 onClick={() => handleSort("quantity")}
               >
                 <div className="flex items-center gap-1">
-                  Quantità
+                  Disponibili/Totali
                   {getSortIcon("quantity")}
                 </div>
               </th>
+              <th 
+                className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider cursor-pointer"
+                onClick={() => handleSort("available")}
+              >
+                <div className="flex items-center gap-1">
+                  Disponibilità
+                  {getSortIcon("available")}
+                </div>
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
-                Disponibilità
+                Stato
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">
                 Azioni
@@ -269,17 +302,9 @@ export default function AttrezzaturePage() {
                   {item.description || "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                  {item.totalQuantity}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex flex-col gap-1">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
-                        item.status,
-                        item.availableQuantity
-                      )}`}
-                    >
-                      {getStatusText(item.status, item.availableQuantity, item.totalQuantity)}
+                    <span className="text-sm">
+                      {getAvailableQuantity(item)}/{item.quantity}
                     </span>
                     {getFutureAvailabilityText(item.futureRentals) && (
                       <span className="text-xs text-gray-500">
@@ -287,6 +312,33 @@ export default function AttrezzaturePage() {
                       </span>
                     )}
                   </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex flex-col gap-1">
+                    <span className={`text-sm font-medium ${getAvailabilityColor(getAvailableQuantity(item), item.quantity)}`}>
+                      {getAvailableQuantity(item)}/{item.quantity}
+                    </span>
+                    {getFutureAvailabilityText(item.futureRentals) && (
+                      <span className="text-xs text-gray-500">
+                        {getFutureAvailabilityText(item.futureRentals)}
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-900">
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    item.status === "AVAILABLE"
+                      ? "bg-green-100 text-green-800"
+                      : item.status === "MAINTENANCE"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                  }`}>
+                    {item.status === "AVAILABLE"
+                      ? "Disponibile"
+                      : item.status === "MAINTENANCE"
+                      ? "In Manutenzione"
+                      : "Non Disponibile"}
+                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
                   <Link

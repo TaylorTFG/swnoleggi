@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: Request,
@@ -15,21 +13,21 @@ export async function GET(
       include: {
         equipment: {
           select: {
+            id: true,
             name: true,
-            category: true,
           },
         },
       },
       orderBy: {
-        startDate: 'desc',
+        startDate: "desc",
       },
     });
 
     return NextResponse.json(rentals);
   } catch (error) {
-    console.error("Errore durante il recupero dei noleggi:", error);
+    console.error("Error fetching customer rentals:", error);
     return NextResponse.json(
-      { error: "Errore durante il recupero dei noleggi" },
+      { error: "Errore durante il recupero dei noleggi del cliente" },
       { status: 500 }
     );
   }

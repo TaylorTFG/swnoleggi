@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Plus } from "lucide-react";
+import { format } from "date-fns";
 
 interface Rental {
   id: string;
@@ -18,6 +19,7 @@ interface Rental {
   endDate: string;
   status: string;
   notes: string | null;
+  quantity: number;
 }
 
 export default function NoleggiPage() {
@@ -148,44 +150,30 @@ export default function NoleggiPage() {
         <table className="min-w-full">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                Cliente
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                Attrezzatura
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                Data Inizio
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                Data Fine
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                Stato
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                Azioni
-              </th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Cliente</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Attrezzatura</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Quantità</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Data Inizio</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Data Fine</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Stato</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-900">Azioni</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredRentals.map((rental) => (
-              <tr key={rental.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-800">{rental.customer.name}</div>
-                  <div className="text-sm text-gray-600">{rental.customer.email}</div>
+              <tr key={rental.id} className="border-t border-gray-200">
+                <td className="px-4 py-2 text-sm text-gray-900">{rental.customer.name}</td>
+                <td className="px-4 py-2 text-sm text-gray-900">
+                  {rental.equipment.name} - {rental.equipment.category}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-800">{rental.equipment.name}</div>
-                  <div className="text-sm text-gray-600">{rental.equipment.category}</div>
+                <td className="px-4 py-2 text-sm text-gray-900">{rental.quantity}</td>
+                <td className="px-4 py-2 text-sm text-gray-900">
+                  {format(new Date(rental.startDate), "dd/MM/yyyy")}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {new Date(rental.startDate).toLocaleDateString()}
+                <td className="px-4 py-2 text-sm text-gray-900">
+                  {rental.endDate ? format(new Date(rental.endDate), "dd/MM/yyyy") : "-"}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {new Date(rental.endDate).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-2">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
                       rental.status
@@ -194,7 +182,7 @@ export default function NoleggiPage() {
                     {getStatusText(rental.status)}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
+                <td className="px-4 py-2">
                   <Link
                     href={`/dashboard/noleggi/${rental.id}/modifica`}
                     className="text-blue-700 hover:text-blue-900 font-medium mr-4"
